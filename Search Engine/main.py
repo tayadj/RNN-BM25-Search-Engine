@@ -1,5 +1,7 @@
+from collections import Counter
 import pandas as pd
 import numpy as np
+import math
 import re
 
 class Model:
@@ -9,7 +11,7 @@ class Model:
         self.activation = lambda x: np.exp(x) / sum(np.exp(x))
         self.activation_derivative = lambda x: (1 - x ** 2)
         self.loss = lambda x: -np.log(x)
-        
+
         self.stops = []
         
         self.load_data(data_path)
@@ -167,13 +169,10 @@ class Model:
     def predict(self, value):
         
         inputs = self.convert_text(value)
-
         hidden, output = self.forward(inputs)
-
         probabilities = self.activation(output)
-        prediction = np.argmax(probabilities) 
-
-        print(f"Topic: {self.topics[prediction]}\n\nProbabilities:\n{probabilities}")    
+        
+        return probabilities
 
     def save(self, path = './data/model.npz'):
 
@@ -188,3 +187,78 @@ class Model:
             self.weights_hidden_to_hidden = loaded['weights_hidden_to_hidden']
             self.bias_hidden = loaded['bias_hidden']
             self.bias_output = loaded['bias_output']
+
+class Engine:
+
+    def __init__(self):
+        
+        self.model = Model()
+
+    def compute_idf(self, corpus):
+
+        size = len(corpus)
+        counter = Counter()
+        idf = {}
+
+        for document in corpus:
+
+            unique_terms = set(document)
+
+            for term in unique_terms:
+
+                counter[term] += 1
+        
+        for term, frequency in counter.items():
+
+            idf[term] = math.log((size - frequency + 0.5) / (frequency + 0.5) + 1)
+
+        return idf
+
+    def compute_bm25(self, corpus, k1 = 1.5, b = 0.75):
+
+        idf = self.compute_idf(corpus)
+        bm25 = []
+
+        average_document_length = sum(len(document) for document in corpus) / len(corpus)       
+
+        for document in corpus:
+
+            document_length = len(document)
+            term_frequency = Counter(document)
+            score = {}
+
+            for term, frequency in term_frequency.items():
+
+                numerator = idf.get(term, 0) * frequency * (k1 + 1)
+                denominator = frequency + k1 * (1 - b + b * (document_length / average_document_length))
+                score[term] = numerator / denominator
+
+            bm25.append(score)
+
+        return bm25
+
+    def search(self, query):
+
+        probabilites = self.model.predict(query)
+        prediction = np.argmax(probabilities)  
+
+        print(f"Topic: {self.model.topics[prediction]}\n\nProbabilities:\n{probabilities}")  
+
+        tokenized_query = query.split()   
+        
+        result = self.model.data
+
+        corpus = [document.split() for document in (result['Title'] + ' ' + result['Text'])]
+        bm25_scores = self.compute_bm25(corpus)
+
+        scores = []
+
+        for score in bm25_scores:
+
+            total_score = sum(score.get(term, 0) for term in tokenized_query)
+            scores.append(total_score)
+
+        result['Score'] = scores
+        result = result.sort_values(by = 'Score', ascending = False)
+
+        print(result)
