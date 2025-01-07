@@ -1,8 +1,11 @@
 from collections import Counter
 import pandas as pd
 import numpy as np
+import warnings
 import math
 import re
+
+warnings.filterwarnings("ignore")
 
 class Model:
 
@@ -54,10 +57,10 @@ class Model:
 
     def load_vocabulary(self):
 
-        self.vocabulary = list(set([word for text in self.data.values.flatten() for word in text.split()]))
+        self.vocabulary = sorted(list(set([word for text in self.data.values.flatten() for word in text.split()])))
         self.vocabulary_size = len(self.vocabulary)
 
-        self.topics = list(set([word for text in self.data.values.flatten()[2::3] for word in text.split()]))
+        self.topics = sorted(list(set([word for text in self.data.values.flatten()[2::3] for word in text.split()])))
         self.topics_size = len(self.topics)
 
         self.stops = list(set.intersection(*[set(text.split()) for text in self.data.values.flatten()[1::3]]))
@@ -176,7 +179,17 @@ class Model:
 
     def save(self, path = './data/model.npz'):
 
-        np.savez(path, weights_input_to_hidden = self.weights_input_to_hidden, weights_hidden_to_output = self.weights_hidden_to_output, weights_hidden_to_hidden = self.weights_hidden_to_hidden, bias_hidden = self.bias_hidden, bias_output = self.bias_output)
+        np.savez(path, 
+        weights_input_to_hidden = self.weights_input_to_hidden, 
+        weights_hidden_to_output = self.weights_hidden_to_output, 
+        weights_hidden_to_hidden = self.weights_hidden_to_hidden, 
+        bias_hidden = self.bias_hidden, 
+        bias_output = self.bias_output, 
+        topics = self.topics,
+        vocabulary = self.vocabulary,
+        dimension_hidden = [self.dimension_hidden],
+        stops = self.stops
+        )
 
     def load(self, path = './data/model.npz'):
 
@@ -188,11 +201,32 @@ class Model:
             self.bias_hidden = loaded['bias_hidden']
             self.bias_output = loaded['bias_output']
 
+            self.topics = loaded['topics']
+            self.topics_size = len(self.topics)
+
+            self.vocabulary = loaded['vocabulary']
+            self.vocabulary_size = len(self.vocabulary)
+
+            self.word_to_index = { word : index for index, word in enumerate(self.vocabulary) }
+            self.index_to_word = { index : word for index, word in enumerate(self.vocabulary) }
+
+            self.stops = loaded['stops']
+
+            self.dimension_input = self.vocabulary_size
+            self.dimension_output = self.topics_size
+            self.dimension_hidden = loaded['dimension_hidden'][0]
+
+                    
+
+        
+
+
 class Engine:
 
     def __init__(self):
         
         self.model = Model()
+        self.model.load()
 
     def compute_idf(self, corpus):
 
@@ -237,17 +271,31 @@ class Engine:
 
         return bm25
 
+
+    def display(self, content, query):
+        
+        print(f'===========================================\nQuery: {query}\n\n')
+
+        for index, row in content.iterrows():
+
+            topic = row['Title']
+            text = row['Text']
+
+            separator = "- " * int(max(content['Title'].apply(len).max(), len('Title'))/2)
+
+            print(f"{row['Title']}\n{separator}\n{row['Text']}\n\n")
+
+        print(f'===========================================\n')
+
     def search(self, query):
 
-        probabilites = self.model.predict(query)
+        tokenized_query = query.split() 
+
+        probabilities = self.model.predict(query)
         prediction = np.argmax(probabilities)  
 
-        print(f"Topic: {self.model.topics[prediction]}\n\nProbabilities:\n{probabilities}")  
-
-        tokenized_query = query.split()   
+        result = self.model.data[self.model.data['Topic'] == self.model.topics[prediction]]
         
-        result = self.model.data
-
         corpus = [document.split() for document in (result['Title'] + ' ' + result['Text'])]
         bm25_scores = self.compute_bm25(corpus)
 
@@ -259,6 +307,7 @@ class Engine:
             scores.append(total_score)
 
         result['Score'] = scores
+        result = result[result['Score'] > 0.001]
         result = result.sort_values(by = 'Score', ascending = False)
 
-        print(result)
+        self.display(result, query)
