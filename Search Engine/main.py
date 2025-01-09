@@ -201,7 +201,7 @@ class Model:
             self.bias_hidden = loaded['bias_hidden']
             self.bias_output = loaded['bias_output']
 
-            self.topics = loaded['topics']
+            self.topics = list(loaded['topics'])
             self.topics_size = len(self.topics)
 
             self.vocabulary = loaded['vocabulary']
@@ -227,6 +227,13 @@ class Engine:
         
         self.model = Model()
         self.model.load()
+
+    def normalize_text(self, text):
+
+        text = text.lower()
+        text = re.sub(r'[^\w\s\']', '', text)
+
+        return text
 
     def compute_idf(self, corpus):
 
@@ -287,14 +294,17 @@ class Engine:
 
         print(f'===========================================\n')
 
-    def search(self, query):
+    def search(self, query, precision = 1.75):
 
-        tokenized_query = query.split() 
+        tokenized_query = self.normalize_text(query).split() 
 
         probabilities = self.model.predict(query)
-        prediction = np.argmax(probabilities)  
+        threshold = 1 / self.model.topics_size - 0.05
 
-        result = self.model.data[self.model.data['Topic'] == self.model.topics[prediction]]
+        valid_indices = [index for index, probability in enumerate(probabilities) if probability > threshold]
+        valid_topics = [self.model.topics[i] for i in valid_indices]
+
+        result = self.model.data[self.model.data['Topic'].isin(valid_topics)]
         
         corpus = [document.split() for document in (result['Title'] + ' ' + result['Text'])]
         bm25_scores = self.compute_bm25(corpus)
@@ -307,7 +317,7 @@ class Engine:
             scores.append(total_score)
 
         result['Score'] = scores
-        result = result[result['Score'] > 0.001]
+        result = result[result['Score'] > precision]
         result = result.sort_values(by = 'Score', ascending = False)
 
         self.display(result, query)
