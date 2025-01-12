@@ -10,6 +10,28 @@ Advanced search engine that leverages a Recurrent Neural Network (RNN) and the B
 - **Automatic Topic Expansion**: Supports automatic expansion of article topics to enhance search results.
 - **Scalability**: Designed to handle large datasets and provide quick search responses.
 
+## Installation
+
+To install the necessary dependencies, run the following command:
+
+```bash
+pip install numpy pandas
+```
+
+## Usage
+
+To start the search engine, run the following command:
+
+```bash
+python main.py
+```
+
+## Project Description
+
+- **articles.csv**: Contains the articles to be indexed and searched.
+- **model.npz**: Compressed version of the pre-trained model.
+- **main.py**: Implementation and entry point of the application, containing the `model` class for the recurrent neural network and the `engine` class for the search engine based on `model` predictions and BM25 relevance metrics.
+
 ## License
 
 This project is licensed under the MIT License.
