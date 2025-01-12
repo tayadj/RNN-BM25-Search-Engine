@@ -23,7 +23,7 @@ class Model:
         self.load_network(hidden_dimension)
 
     def normalize_text(self, text):
-
+     
         text = text.lower()
         text = re.sub(r'[^\w\s\']', '', text)
         text = ' '.join([word for word in text.split() if len(word) > 2 and word not in self.stops])
@@ -284,14 +284,14 @@ class Engine:
 
     def display(self, content, query):
         
-        print(f'===========================================\nQuery: {query}\n\n')
+        print(f'\n===========================================\nQuery: {query}\n\n')
 
         for index, row in content.iterrows():
 
             topic = row['Title']
             text = row['Text']
 
-            separator = "- " * int(max(content['Title'].apply(len).max(), len('Title'))/2)
+            separator = "- " * int(max(content['Title'].apply(len).max(), len('Title'))/2 + 1)
 
             print(f"{row['Title']}\n{separator}\n{row['Text']}\n\n")
 
@@ -320,7 +320,11 @@ class Engine:
             scores.append(total_score)
 
         result['Score'] = scores
+        result['Title'] = self.model.data_raw['Title']
+        result['Text'] = self.model.data_raw['Text']
         result = result[result['Score'] > precision]
         result = result.sort_values(by = 'Score', ascending = False)
+
+        
 
         self.display(result, query)
