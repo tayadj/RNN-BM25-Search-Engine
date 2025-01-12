@@ -191,7 +191,8 @@ class Model:
         topics = self.topics,
         vocabulary = self.vocabulary,
         dimension_hidden = [self.dimension_hidden],
-        stops = self.stops
+        stops = self.stops,
+        stops_coefficient = [self.stops_coefficient]
         )
 
     def load(self, path = './data/model.npz'):
@@ -214,6 +215,7 @@ class Model:
             self.index_to_word = { index : word for index, word in enumerate(self.vocabulary) }
 
             self.stops = loaded['stops']
+            self.stops_coefficient = loaded['stops_coefficient'][0]
 
             self.dimension_input = self.vocabulary_size
             self.dimension_output = self.topics_size
@@ -284,7 +286,7 @@ class Engine:
 
     def display(self, content, query):
         
-        print(f'\n===========================================\nQuery: {query}\n\n')
+        print(f'===========================================\nQuery: {query}\n\n')
 
         for index, row in content.iterrows():
 
@@ -324,7 +326,5 @@ class Engine:
         result['Text'] = self.model.data_raw['Text']
         result = result[result['Score'] > precision]
         result = result.sort_values(by = 'Score', ascending = False)
-
-        
 
         self.display(result, query)
