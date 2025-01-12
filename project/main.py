@@ -9,12 +9,13 @@ warnings.filterwarnings("ignore")
 
 class Model:
 
-    def __init__(self, hidden_dimension = 64, data_path = './data/articles.csv'):
+    def __init__(self, hidden_dimension = 64, stops_coefficient = 0.8, data_path = './data/articles.csv'):
 
         self.activation = lambda x: np.exp(x) / sum(np.exp(x))
         self.activation_derivative = lambda x: (1 - x ** 2)
         self.loss = lambda x: -np.log(x)
-
+        
+        self.stops_coefficient = stops_coefficient
         self.stops = []
         
         self.load_data(data_path)
@@ -63,7 +64,9 @@ class Model:
         self.topics = sorted(list(set([word for text in self.data.values.flatten()[2::3] for word in text.split()])))
         self.topics_size = len(self.topics)
 
-        self.stops = list(set.intersection(*[set(text.split()) for text in self.data.values.flatten()[1::3]]))
+        word_counts = Counter(word for text in self.data.values.flatten()[1::3] for word in set(text.split()))
+        total_texts = len(self.data.values.flatten()[1::3])
+        self.stops = [word for word, count in word_counts.items() if count / total_texts > self.stops_coefficient]
 
         self.word_to_index = { word : index for index, word in enumerate(self.vocabulary) }
         self.index_to_word = { index : word for index, word in enumerate(self.vocabulary) }
@@ -299,7 +302,7 @@ class Engine:
         tokenized_query = self.normalize_text(query).split() 
 
         probabilities = self.model.predict(query)
-        threshold = 1 / self.model.topics_size - 0.05
+        threshold = 1 / self.model.topics_size
 
         valid_indices = [index for index, probability in enumerate(probabilities) if probability > threshold]
         valid_topics = [self.model.topics[i] for i in valid_indices]
