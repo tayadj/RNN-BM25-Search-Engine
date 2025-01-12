@@ -299,7 +299,7 @@ class Engine:
 
         print(f'===========================================\n')
 
-    def search(self, query, precision = 1.75):
+    def search(self, query, precision = 0.25):
 
         tokenized_query = self.normalize_text(query).split() 
 
