@@ -15,7 +15,7 @@ Advanced search engine that leverages a Recurrent Neural Network (RNN) and the B
 To install the necessary dependencies, run the following command:
 
 ```bash
-pip install numpy pandas
+pip install pytest numpy pandas
 ```
 
 ## Usage
@@ -23,7 +23,16 @@ pip install numpy pandas
 To start the search engine, run the following command:
 
 ```bash
+cd project
 python main.py
+```
+
+## Test
+
+To manually test the search engine, run the following command:
+```bash
+cd project
+pytest --tb=no test.py
 ```
 
 ## Project Description
@@ -31,6 +40,7 @@ python main.py
 - **articles.csv**: Contains the articles to be indexed and searched.
 - **model.npz**: Compressed version of the pre-trained model.
 - **main.py**: Implementation and entry point of the application, containing the `model` class for the recurrent neural network and the `engine` class for the search engine based on `model` predictions and BM25 relevance metrics.
+- **test.py**: This file contains unit tests for the project search engine, based on `pytest`
 
 ## License
 
