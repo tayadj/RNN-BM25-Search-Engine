@@ -27,4 +27,4 @@ jobs:
     - name: Run tests
       run: |
         cd project
-        pytest test.py
+        pytest --tb=no test.py
