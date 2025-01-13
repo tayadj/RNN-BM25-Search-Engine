@@ -26,4 +26,5 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest ./project/test.py
+        cd project
+        pytest test.py
