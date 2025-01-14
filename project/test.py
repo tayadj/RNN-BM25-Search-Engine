@@ -38,19 +38,20 @@ def test_engine_search_definitions(capfd, query):
 
 query_questions = [
     "What is the concept of Microeconomics?",
+    "What studies nuclear reaction in atoms?",
 ]
 
 query_answers = [
     "Microeconomics focuses on the study of individual markets, sectors, or industries as opposed to the economy as a whole, which is studied in macroeconomics.",
+    "Nuclear physics",
 ]
 
 @pytest.mark.filterwarnings("ignore")
-@pytest.mark.parametrize("query", query_questions)
-@pytest.mark.parametrize("answer", query_answers)
-def test_engine_search_questions(capfd, query, answer):
+@pytest.mark.parametrize("question, answer", zip(query_questions, query_answers))
+def test_engine_search_questions(capfd, question, answer):
 
 	e = Engine()
-	e.search(query)
+	e.search(question)
 
 	out, err = capfd.readouterr()
 
