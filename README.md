@@ -40,7 +40,8 @@ pytest --tb=no test.py
 - **articles.csv**: Contains the articles to be indexed and searched.
 - **model.npz**: Compressed version of the pre-trained model.
 - **main.py**: Implementation and entry point of the application, containing the `model` class for the recurrent neural network and the `engine` class for the search engine based on `model` predictions and BM25 relevance metrics.
-- **test.py**: This file contains unit tests for the project search engine, based on `pytest`
+- **test.py**: Contains unit tests for the project search engine, based on `pytest`.
+- **research.ipynb**: A study on the loss and accuracy of the model over the epochs in the context of various learning strategies. 
 
 ## License
 
