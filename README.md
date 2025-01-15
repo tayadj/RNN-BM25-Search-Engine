@@ -35,7 +35,7 @@ cd project
 pytest --tb=no test.py
 ```
 
-## Project Description
+## Structure
 
 - **articles.csv**: Contains the articles to be indexed and searched.
 - **model.npz**: Compressed version of the pre-trained model.
