@@ -306,7 +306,7 @@ class Engine:
         probabilities = self.model.predict(query)
         threshold = 1 / self.model.topics_size
 
-        valid_indices = [index for index, probability in enumerate(probabilities) if probability > threshold]
+        valid_indices = [index for index, probability in enumerate(probabilities) if probability >= threshold]
         valid_topics = [self.model.topics[i] for i in valid_indices]
 
         result = self.model.data[self.model.data['Topic'].isin(valid_topics)]
